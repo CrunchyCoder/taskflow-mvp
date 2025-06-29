@@ -14,7 +14,7 @@ function App() {
     if (!newProjectName.trim()) return;
     setProjects([
       ...projects,
-      { id: uuidv4(), name: newProjectName, color: "#B49A7A" }
+      { id: uuidv4(), name: newProjectName, color: "#B49A7A" },
     ]);
     setNewProjectName("");
   };
@@ -29,15 +29,13 @@ function App() {
         text: newTaskText,
         done: false,
         estimatedTime: 30,
-      }
+      },
     ]);
     setNewTaskText("");
   };
 
   const toggleTaskDone = (taskId) => {
-    setTasks(tasks.map(t =>
-      t.id === taskId ? { ...t, done: !t.done } : t
-    ));
+    setTasks(tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)));
   };
 
   const addToTodoQueue = (taskId) => {
@@ -50,46 +48,43 @@ function App() {
     projects.find((p) => p.id === projectId)?.name || "Unknown";
 
   return (
-    <div className="min-h-screen bg-ash py-10 px-4 font-sans">
-      <div className="max-w-4xl mx-auto space-y-10">
-        <h1 className="text-4xl font-bold text-clay mb-6">TaskFlow</h1>
-
-        {/* Project Card */}
-        <div className="bg-white rounded-2xl shadow p-6 space-y-4">
-          <h2 className="text-2xl font-semibold text-moss">Projects</h2>
-          <div className="flex gap-2">
-            <input
-              className="flex-grow border border-sand rounded p-2 focus:outline-moss"
-              placeholder="New project name"
-              value={newProjectName}
-              onChange={(e) => setNewProjectName(e.target.value)}
-            />
+    <div className="min-h-screen bg-ash font-sans">
+      {/* Sidebar */}
+      <div className="fixed top-0 left-0 h-full w-64 bg-sand p-6 shadow-lg">
+        <h2 className="text-2xl font-bold text-clay mb-4">TaskFlow</h2>
+        <div className="space-y-2">
+          {projects.map((project) => (
             <button
-              onClick={addProject}
-              className="bg-moss text-white px-4 py-2 rounded hover:bg-sage"
+              key={project.id}
+              className={`w-full text-left px-4 py-2 rounded-lg font-medium text-white transition ${
+                selectedProjectId === project.id ? "bg-moss" : "bg-clay hover:bg-moss"
+              }`}
+              onClick={() => setSelectedProjectId(project.id)}
             >
-              Add
+              {project.name}
             </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {projects.map((project) => (
-              <button
-                key={project.id}
-                className={`px-4 py-1 rounded-xl text-white font-semibold transition ${
-                  selectedProjectId === project.id ? "opacity-100" : "opacity-60"
-                }`}
-                style={{ backgroundColor: project.color }}
-                onClick={() => setSelectedProjectId(project.id)}
-              >
-                {project.name}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
+        <div className="mt-6">
+          <input
+            className="w-full border border-sand rounded p-2 mb-2"
+            placeholder="New project"
+            value={newProjectName}
+            onChange={(e) => setNewProjectName(e.target.value)}
+          />
+          <button
+            onClick={addProject}
+            className="w-full bg-moss text-white px-4 py-2 rounded hover:bg-sage"
+          >
+            Add Project
+          </button>
+        </div>
+      </div>
 
-        {/* Task Card */}
+      {/* Main Content */}
+      <div className="ml-72 py-10 px-6 space-y-10">
         {selectedProjectId && (
-          <div className="bg-white rounded-2xl shadow p-6 space-y-4">
+          <section className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
             <h2 className="text-2xl font-semibold text-terracotta">
               Tasks for {getProjectName(selectedProjectId)}
             </h2>
@@ -102,12 +97,12 @@ function App() {
               />
               <button
                 onClick={addTask}
-                className="bg-terracotta text-white px-4 py-2 rounded hover:bg-clay"
+                className="bg-terracotta text-white px-4 py-2 rounded-xl hover:bg-clay"
               >
                 Add
               </button>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {tasks
                 .filter((t) => t.projectId === selectedProjectId)
                 .map((task) => (
@@ -115,19 +110,23 @@ function App() {
                     key={task.id}
                     className="flex justify-between items-center bg-sand rounded-xl p-3 shadow-sm"
                   >
-                    <span className={task.done ? "line-through text-gray-400" : ""}>
+                    <span
+                      className={
+                        task.done ? "line-through text-gray-400" : "text-gray-700"
+                      }
+                    >
                       {task.text}
                     </span>
                     <div className="space-x-3">
                       <button
                         onClick={() => addToTodoQueue(task.id)}
-                        className="text-blue-600 text-sm"
+                        className="text-sm text-blue-600 hover:underline"
                       >
                         ➕ Queue
                       </button>
                       <button
                         onClick={() => toggleTaskDone(task.id)}
-                        className="text-green-600 text-sm"
+                        className="text-sm text-green-600 hover:underline"
                       >
                         {task.done ? "Undo" : "Done"}
                       </button>
@@ -135,11 +134,11 @@ function App() {
                   </li>
                 ))}
             </ul>
-          </div>
+          </section>
         )}
 
-        {/* To-Do Queue Card */}
-        <div className="bg-white rounded-2xl shadow p-6 space-y-4">
+        {/* To-Do Queue */}
+        <section className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
           <h2 className="text-2xl font-semibold text-clay">📋 Today's Queue</h2>
           {todoQueue.length === 0 ? (
             <p className="text-gray-500">No tasks added to today’s queue.</p>
@@ -162,7 +161,7 @@ function App() {
               })}
             </ul>
           )}
-        </div>
+        </section>
       </div>
     </div>
   );
