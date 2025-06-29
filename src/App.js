@@ -9,6 +9,7 @@ function App() {
   const [newProjectName, setNewProjectName] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [newTaskText, setNewTaskText] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const addProject = () => {
     if (!newProjectName.trim()) return;
@@ -48,9 +49,13 @@ function App() {
     projects.find((p) => p.id === projectId)?.name || "Unknown";
 
   return (
-    <div className="min-h-screen bg-ash font-sans">
+    <div className="min-h-screen bg-ash font-sans flex">
       {/* Sidebar */}
-      <div className="fixed top-0 left-0 h-full w-64 bg-sand p-6 shadow-lg">
+      <div
+        className={`fixed top-0 left-0 z-30 h-full w-64 bg-sand p-6 shadow-lg transform transition-transform duration-300 lg:relative lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         <h2 className="text-2xl font-bold text-clay mb-4">TaskFlow</h2>
         <div className="space-y-2">
           {projects.map((project) => (
@@ -59,7 +64,10 @@ function App() {
               className={`w-full text-left px-4 py-2 rounded-lg font-medium text-white transition ${
                 selectedProjectId === project.id ? "bg-moss" : "bg-clay hover:bg-moss"
               }`}
-              onClick={() => setSelectedProjectId(project.id)}
+              onClick={() => {
+                setSelectedProjectId(project.id);
+                setSidebarOpen(false);
+              }}
             >
               {project.name}
             </button>
@@ -81,8 +89,24 @@ function App() {
         </div>
       </div>
 
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-30 z-20 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* Main Content */}
-      <div className="ml-72 py-10 px-6 space-y-10">
+      <div className="flex-1 ml-0 lg:ml-64 py-10 px-6 space-y-10">
+        {/* Toggle button */}
+        <button
+          className="lg:hidden mb-4 text-clay font-semibold"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+        >
+          ☰ Menu
+        </button>
+
         {selectedProjectId && (
           <section className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
             <h2 className="text-2xl font-semibold text-terracotta">
