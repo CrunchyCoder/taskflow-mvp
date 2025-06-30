@@ -1,192 +1,125 @@
-import React, { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-import "./App.css";
+import React, { useState } from 'react';
+import { useTaskFlow } from './hooks/useTaskFlow';
+import Sidebar from './components/layout/Sidebar';
+import TaskForm from './components/tasks/TaskForm';
+import TaskList from './components/tasks/TaskList';
+import TimeDisplay from './components/common/TimeDisplay';
+import TodayQueue from './components/queue/TodayQueue';
 
 function App() {
-  const [projects, setProjects] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [todoQueue, setTodoQueue] = useState([]);
-  const [newProjectName, setNewProjectName] = useState("");
-  const [selectedProjectId, setSelectedProjectId] = useState(null);
-  const [newTaskText, setNewTaskText] = useState("");
+  const {
+    projects,
+    tasks,
+    todoQueue,
+    selectedProjectId,
+    setSelectedProjectId,
+    addProject,
+    getProject,
+    addTask,
+    toggleTaskDone,
+    updateTaskTime,
+    getProjectTasks,
+    addToQueue,
+    removeFromQueue
+  } = useTaskFlow();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [draggedTaskId, setDraggedTaskId] = useState(null);
 
-  const addProject = () => {
-    if (!newProjectName.trim()) return;
-    setProjects([
-      ...projects,
-      { id: uuidv4(), name: newProjectName, color: "#B49A7A" },
-    ]);
-    setNewProjectName("");
+  const handleDragStart = (taskId) => {
+    setDraggedTaskId(taskId);
   };
 
-  const addTask = () => {
-    if (!newTaskText.trim() || !selectedProjectId) return;
-    setTasks([
-      ...tasks,
-      {
-        id: uuidv4(),
-        projectId: selectedProjectId,
-        text: newTaskText,
-        done: false,
-        estimatedTime: 30,
-      },
-    ]);
-    setNewTaskText("");
+  const handleDragEnd = () => {
+    setDraggedTaskId(null);
   };
 
-  const toggleTaskDone = (taskId) => {
-    setTasks(tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)));
-  };
-
-  const addToTodoQueue = (taskId) => {
-    if (!todoQueue.includes(taskId)) {
-      setTodoQueue([...todoQueue, taskId]);
+  const handleQueueDrop = (taskId) => {
+    if (taskId && !todoQueue.find(q => q.id === taskId)) {
+      addToQueue(taskId);
     }
   };
 
-  const getProjectName = (projectId) =>
-    projects.find((p) => p.id === projectId)?.name || "Unknown";
+  const selectedProject = getProject(selectedProjectId);
+  const projectTasks = getProjectTasks(selectedProjectId);
 
   return (
-    <div className="min-h-screen bg-ash font-sans flex">
-      {/* Sidebar */}
-      <div
-        className={`fixed top-0 left-0 z-30 h-full w-64 bg-sand p-6 shadow-lg transform transition-transform duration-300 lg:relative lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <h2 className="text-2xl font-bold text-clay mb-4">TaskFlow</h2>
-        <div className="space-y-2">
-          {projects.map((project) => (
-            <button
-              key={project.id}
-              className={`w-full text-left px-4 py-2 rounded-lg font-medium text-white transition ${
-                selectedProjectId === project.id ? "bg-moss" : "bg-clay hover:bg-moss"
-              }`}
-              onClick={() => {
-                setSelectedProjectId(project.id);
-                setSidebarOpen(false);
-              }}
-            >
-              {project.name}
-            </button>
-          ))}
-        </div>
-        <div className="mt-6">
-          <input
-            className="w-full border border-sand rounded p-2 mb-2"
-            placeholder="New project"
-            value={newProjectName}
-            onChange={(e) => setNewProjectName(e.target.value)}
-          />
-          <button
-            onClick={addProject}
-            className="w-full bg-moss text-white px-4 py-2 rounded hover:bg-sage"
-          >
-            Add Project
-          </button>
-        </div>
-      </div>
-
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-30 z-20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-      )}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 font-sans flex text-gray-800">
+      <Sidebar 
+        projects={projects}
+        selectedProjectId={selectedProjectId}
+        onSelectProject={setSelectedProjectId}
+        onAddProject={addProject}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       {/* Main Content */}
-      <div className="flex-1 ml-0 lg:ml-64 py-10 px-6 space-y-10">
-        {/* Toggle button */}
-        <button
-          className="lg:hidden mb-4 text-clay font-semibold"
+      <div className="flex-1 py-6 px-6 space-y-6 lg:ml-0">
+        <button 
+          className="lg:hidden mb-4 text-gray-700 font-semibold bg-white px-4 py-2 rounded-lg shadow-sm" 
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
           ☰ Menu
         </button>
 
-        {selectedProjectId && (
-          <section className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
-            <h2 className="text-2xl font-semibold text-terracotta">
-              Tasks for {getProjectName(selectedProjectId)}
-            </h2>
-            <div className="flex gap-2">
-              <input
-                className="flex-grow border border-sand rounded p-2 focus:outline-none"
-                placeholder="New task..."
-                value={newTaskText}
-                onChange={(e) => setNewTaskText(e.target.value)}
-              />
-              <button
-                onClick={addTask}
-                className="bg-terracotta text-white px-4 py-2 rounded-xl hover:bg-clay"
-              >
-                Add
-              </button>
+        {/* Project Tasks Section */}
+        {selectedProject && (
+          <section className="bg-white rounded-2xl shadow-lg p-6 space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold text-gray-800 flex items-center">
+                📁 {selectedProject.name}
+              </h2>
+              <span className="text-sm text-gray-500">
+                {projectTasks.length} tasks
+              </span>
             </div>
-            <ul className="space-y-3">
-              {tasks
-                .filter((t) => t.projectId === selectedProjectId)
-                .map((task) => (
-                  <li
-                    key={task.id}
-                    className="flex justify-between items-center bg-sand rounded-xl p-3 shadow-sm"
-                  >
-                    <span
-                      className={
-                        task.done ? "line-through text-gray-400" : "text-gray-700"
-                      }
-                    >
-                      {task.text}
-                    </span>
-                    <div className="space-x-3">
-                      <button
-                        onClick={() => addToTodoQueue(task.id)}
-                        className="text-sm text-blue-600 hover:underline"
-                      >
-                        ➕ Queue
-                      </button>
-                      <button
-                        onClick={() => toggleTaskDone(task.id)}
-                        className="text-sm text-green-600 hover:underline"
-                      >
-                        {task.done ? "Undo" : "Done"}
-                      </button>
-                    </div>
-                  </li>
-                ))}
-            </ul>
+
+            <TaskForm 
+              onAddTask={addTask}
+              selectedProjectId={selectedProjectId}
+            />
+
+            <TimeDisplay tasks={projectTasks} title="📊 Project Overview" />
+
+            <TaskList
+              items={projectTasks}
+              onToggle={toggleTaskDone}
+              onQueue={addToQueue}
+              onUpdateTime={updateTaskTime}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            />
           </section>
         )}
 
-        {/* To-Do Queue */}
-        <section className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
-          <h2 className="text-2xl font-semibold text-clay">📋 Today's Queue</h2>
-          {todoQueue.length === 0 ? (
-            <p className="text-gray-500">No tasks added to today’s queue.</p>
-          ) : (
-            <ul className="space-y-2">
-              {todoQueue.map((taskId) => {
-                const task = tasks.find((t) => t.id === taskId);
-                if (!task) return null;
-                return (
-                  <li
-                    key={task.id}
-                    className="flex justify-between items-center bg-sage/30 rounded-xl p-3"
-                  >
-                    <span>{task.text}</span>
-                    <span className="text-sm text-gray-600">
-                      {task.estimatedTime} min
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
+        {/* Today's Queue Section */}
+        <TodayQueue 
+          todoQueue={todoQueue}
+          onToggle={toggleTaskDone}
+          onRemoveFromQueue={removeFromQueue}
+          onUpdateTime={updateTaskTime}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDrop={handleQueueDrop}
+        />
       </div>
+
+      {/* Drag Overlay */}
+      {draggedTaskId && (
+        <div className="fixed inset-0 pointer-events-none z-50">
+          <div 
+            className="absolute bg-blue-600 text-white px-4 py-3 rounded-lg shadow-lg border border-blue-700 opacity-75"
+            style={{
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)'
+            }}
+          >
+            {tasks.find(t => t.id === draggedTaskId)?.text || "Task"}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
