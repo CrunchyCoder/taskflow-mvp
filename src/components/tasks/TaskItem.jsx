@@ -6,11 +6,18 @@ const TaskItem = ({
   onToggle, 
   onQueue, 
   onUpdateTime, 
+  onUpdateNotes,
+  onUpdateName,
   isQueue = false, 
   showProject = false 
 }) => {
   const [isEditingTime, setIsEditingTime] = useState(false);
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [tempTime, setTempTime] = useState(task.estimatedTime || '');
+  const [tempNotes, setTempNotes] = useState(task.notes || '');
+  const [isEditingName, setIsEditingName] = useState(false);
+const [tempName, setTempName] = useState(task.text || '');      
+
 
   const handleTimeUpdate = () => {
     const time = parseInt(tempTime) || 0;
@@ -18,16 +25,94 @@ const TaskItem = ({
     setIsEditingTime(false);
   };
 
+  const handleNotesUpdate = () => {
+    onUpdateNotes(task.id, tempNotes);
+    setIsEditingNotes(false);
+  };
+
+  const handleNameUpdate = () => {
+    if (tempName.trim()) {
+      onUpdateName(task.id, tempName.trim());
+      setIsEditingName(false);
+    }
+  };
+
   return (
     <div className="flex flex-col w-full space-y-2">
       <div className="flex justify-between items-start">
-        <div className="flex-grow">
-          <span className={`text-lg ${task.done ? "line-through text-gray-400" : "text-gray-800"}`}>
-            {task.text}
-          </span>
+      <div className="flex-grow">
+      {isEditingName ? (
+  <div className="flex items-center space-x-2">
+    <input
+      value={tempName}
+      onChange={(e) => setTempName(e.target.value)}
+      className="flex-grow text-lg border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') handleNameUpdate();
+        if (e.key === 'Escape') setIsEditingName(false);
+      }}
+      autoFocus
+    />
+    <button
+      onClick={handleNameUpdate}
+      className="text-sm text-green-600 hover:text-green-800 bg-green-50 px-2 py-1 rounded"
+    >
+      ✓
+    </button>
+    <button
+      onClick={() => setIsEditingName(false)}
+      className="text-sm text-gray-500 hover:text-gray-700 bg-gray-50 px-2 py-1 rounded"
+    >
+      ✗
+    </button>
+  </div>
+) : (
+  <span 
+    className={`text-lg cursor-pointer hover:bg-gray-100 px-1 py-1 rounded ${task.done ? "line-through text-gray-400" : "text-gray-800"}`}
+    onClick={() => setIsEditingName(true)}
+    title="Click to edit task name"
+  >
+    {task.text}
+  </span>
+)}
           {showProject && (
             <div className="text-sm text-gray-500 mt-1">
               📁 {task.projectName}
+            </div>
+          )}
+          
+          {/* Task Notes Display */}
+          {task.notes && !isEditingNotes && (
+            <div className="text-sm text-gray-600 mt-1 bg-gray-50 rounded p-2">
+              💭 {task.notes}
+            </div>
+          )}
+          
+          {/* Edit Notes */}
+          {isEditingNotes && (
+            <div className="mt-2">
+              <textarea
+                value={tempNotes}
+                onChange={(e) => setTempNotes(e.target.value)}
+                placeholder="Add notes..."
+                className="w-full text-sm border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500"
+                rows="2"
+                autoFocus
+              />
+              <div className="flex gap-2 mt-1">
+                <button
+                  onClick={handleNotesUpdate}
+                  className="text-xs text-green-600 hover:text-green-800 bg-green-50 px-2 py-1 rounded"
+                >
+                  ✓ Save
+                </button>
+                <button
+                  onClick={() => setIsEditingNotes(false)}
+                  className="text-xs text-gray-500 hover:text-gray-700 bg-gray-50 px-2 py-1 rounded"
+                >
+                  ✗ Cancel
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -73,6 +158,13 @@ const TaskItem = ({
               ⏱️ {task.estimatedTime ? formatTime(task.estimatedTime) : 'Add time'}
             </button>
           )}
+          
+          <button
+            onClick={() => setIsEditingNotes(true)}
+            className="flex items-center text-xs text-gray-600 hover:text-purple-600 bg-gray-100 hover:bg-purple-50 px-2 py-1 rounded"
+          >
+            💭 {task.notes ? 'Edit notes' : 'Add notes'}
+          </button>
         </div>
 
         <div className="flex items-center space-x-2 text-sm">

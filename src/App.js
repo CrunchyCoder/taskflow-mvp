@@ -18,13 +18,15 @@ function App() {
     addTask,
     toggleTaskDone,
     updateTaskTime,
+    updateTaskNotes,
+    updateTaskName,
     getProjectTasks,
     addToQueue,
     removeFromQueue
   } = useTaskFlow();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [draggedTaskId, setDraggedTaskId] = useState(null);
+  const [draggedTaskId, setDraggedTaskId] = useState(null); 
 
   const handleDragStart = (taskId) => {
     setDraggedTaskId(taskId);
@@ -87,9 +89,11 @@ function App() {
               onToggle={toggleTaskDone}
               onQueue={addToQueue}
               onUpdateTime={updateTaskTime}
+              onUpdateNotes={updateTaskNotes}
+              onUpdateName={updateTaskName}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
-            />
+            />  
           </section>
         )}
 
@@ -99,10 +103,12 @@ function App() {
           onToggle={toggleTaskDone}
           onRemoveFromQueue={removeFromQueue}
           onUpdateTime={updateTaskTime}
+          onUpdateNotes={updateTaskNotes}
+          onUpdateName={updateTaskName}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           onDrop={handleQueueDrop}
-        />
+        />  
       </div>
 
       {/* Drag Overlay */}

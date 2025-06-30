@@ -7,6 +7,8 @@ const TaskList = ({
   onToggle, 
   onQueue, 
   onUpdateTime, 
+  onUpdateNotes,
+  onUpdateName,
   onDragStart, 
   onDragEnd, 
   isQueue = false, 
@@ -26,6 +28,8 @@ const TaskList = ({
             onToggle={onToggle}
             onQueue={onQueue}
             onUpdateTime={onUpdateTime}
+            onUpdateNotes={onUpdateNotes}
+            onUpdateName={onUpdateName}
             isQueue={isQueue}
             showProject={showProject}
           />

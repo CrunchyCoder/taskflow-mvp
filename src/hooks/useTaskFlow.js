@@ -154,6 +154,23 @@ export const useTaskFlow = () => {
     setTodoQueue(prev => prev.filter(t => t.id !== taskId));
   };
 
+  const updateTaskNotes = (taskId, notes) => {
+    setTasks(prev => prev.map(t => 
+      t.id === taskId ? { ...t, notes } : t
+    ));
+    setTodoQueue(prev => prev.map(t => 
+      t.id === taskId ? { ...t, notes } : t
+    ));
+  };
+
+  const updateTaskName = (taskId, newName) => {
+    setTasks(prev => prev.map(t => 
+      t.id === taskId ? { ...t, text: newName } : t
+    ));
+    setTodoQueue(prev => prev.map(t => 
+      t.id === taskId ? { ...t, text: newName } : t
+    ));
+  };
   return {
     // State
     projects,
@@ -173,6 +190,8 @@ export const useTaskFlow = () => {
     addTask,
     toggleTaskDone,
     updateTaskTime,
+    updateTaskNotes,
+    updateTaskName,
     getProjectTasks,
     
     // Queue operations

@@ -8,6 +8,8 @@ const TodayQueue = ({
   onToggle, 
   onRemoveFromQueue, 
   onUpdateTime, 
+  onUpdateNotes,
+  onUpdateName,
   onDragStart, 
   onDragEnd, 
   onDrop 
@@ -39,6 +41,8 @@ const TodayQueue = ({
           onToggle={onToggle}
           onQueue={onRemoveFromQueue}
           onUpdateTime={onUpdateTime}
+          onUpdateNotes={onUpdateNotes}  // Add if missing
+          onUpdateName={onUpdateName}    // Add this line
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
           isQueue
