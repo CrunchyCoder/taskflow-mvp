@@ -29,11 +29,11 @@ function App() {
     // Add these planning functions
     dailyTimeAvailable,
     planningModalOpen,
+    lastPlanningDate,  // ADD THIS LINE
     updateDailyTimeAvailable,
     openPlanningModal,
     closePlanningModal,
     shouldShowPlanningPrompt,
-    
     // Add these reflection functions
     reflectionModalOpen,
     dailyReflections,
@@ -103,7 +103,9 @@ function App() {
         >
           <span className="mr-2">☰</span> Menu
         </button>
-  {/* Planning Button */}
+
+
+  {/* Planning Bu tton */}
 
 {shouldShowPlanningPrompt() && (
   <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-3xl p-6 border-2 border-purple-200 shadow-xl mb-6">
@@ -206,15 +208,25 @@ function App() {
         </div>
       )}
 
-        {/* Daily Reflection Modal */}
-        <DailyReflectionModal
-            isOpen={reflectionModalOpen}
-            onClose={closeReflectionModal}
-            onSaveReflection={saveReflection}
-            todoQueue={todoQueue}
-            dailyTimeAvailable={dailyTimeAvailable}
-            estimationAccuracy={getEstimationAccuracy()}
-        />
+      {/* Daily Planning Modal */}
+      <DailyPlanningModal
+        isOpen={planningModalOpen}
+        onClose={closePlanningModal}
+        onSetDailyTime={handleSetDailyTime}
+        currentDailyTime={dailyTimeAvailable}
+        availableTasks={getAvailableTasks()}
+        onAddTasksToQueue={handleAddTasksToQueue}
+      />
+
+      {/* Daily Reflection Modal */}
+      <DailyReflectionModal
+        isOpen={reflectionModalOpen}
+        onClose={closeReflectionModal}
+        onSaveReflection={saveReflection}
+        todoQueue={todoQueue}
+        dailyTimeAvailable={dailyTimeAvailable}
+        estimationAccuracy={getEstimationAccuracy()}
+      />
     </div>
   );
 }
