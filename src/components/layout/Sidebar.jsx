@@ -18,20 +18,22 @@ const Sidebar = ({
   return (
     <>
       {/* Sidebar */}
-      <div className={`fixed top-0 left-0 h-full w-64 bg-white p-6 shadow-xl transform transition-transform duration-300 lg:relative border-r border-gray-200 z-50 ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
-        <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center">
-          <span className="mr-2">🎯</span>
-          TaskFlow
-        </h2>
-        
+      <div className={`fixed top-0 left-0 h-full w-64 bg-white/90 backdrop-blur-xl p-6 shadow-2xl transform transition-transform duration-300 lg:relative border-r border-white/30 z-50 ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
+        <h2 className="text-3xl font-bold mb-8 flex items-center">
+    <span className="mr-3 text-4xl">🎯</span>
+    <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+      TaskFlow
+    </span>
+    </h2>
+  
         <ProjectList 
-          projects={projects}
-          selectedProjectId={selectedProjectId}
-          onSelectProject={handleSelectProject}
-        />
-        
+    projects={projects}
+    selectedProjectId={selectedProjectId}
+    onSelectProject={handleSelectProject}
+  />
+  
         <ProjectForm onAddProject={onAddProject} />
-      </div>
+</div>  
 
       {/* Mobile Overlay */}
       {isOpen && (

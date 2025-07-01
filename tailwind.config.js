@@ -1,20 +1,24 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}"],
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+    "./public/index.html"
+  ],
   theme: {
     extend: {
       colors: {
-        clay: "#B49A7A",
-        sage: "#A8BDB4",
-        sand: "#EDE6DB",
-        moss: "#7A9E9F",
-        terracotta: "#C97D60",
-        ash: "#F5F3EF",
+        // Your custom earth tones
+        ash: '#f5f5f4',
+        sand: '#fef7ed',
+        moss: '#16a34a',
+        sage: '#84cc16',
+        clay: '#a3a3a3',
+        terracotta: '#ea580c'
       },
-      fontFamily: {
-        sans: ["'Inter'", "sans-serif"],
-      },
+      backdropBlur: {
+        xs: '2px',
+      }
     },
   },
   plugins: [],
-};
+}

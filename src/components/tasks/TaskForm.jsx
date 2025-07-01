@@ -22,12 +22,12 @@ const TaskForm = ({ onAddTask, selectedProjectId }) => {
   };
 
   return (
-    <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+    <div className="bg-gradient-to-r from-blue-100 to-indigo-100 rounded-3xl p-6 border-2 border-blue-200 shadow-2xl mb-6">
       <form onSubmit={handleSubmit}>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-3 flex-wrap">
           <input
-            className="flex-grow min-w-0 border border-gray-300 rounded-lg p-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="What needs to be done?"
+            className="flex-grow min-w-0 border-2 border-blue-200 rounded-2xl p-4 bg-white focus:ring-4 focus:ring-indigo-200 focus:border-indigo-400 transition-all placeholder-gray-500 shadow-lg"
+            placeholder="✨ What needs to be done?"
             value={newTaskText}
             onChange={e => setNewTaskText(e.target.value)}
             required
@@ -35,7 +35,7 @@ const TaskForm = ({ onAddTask, selectedProjectId }) => {
           <select 
             value={newTaskPriority}
             onChange={e => setNewTaskPriority(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500"
+            className="border-2 border-blue-200 rounded-2xl px-4 py-2 bg-white focus:ring-4 focus:ring-indigo-200 font-medium shadow-lg"
           >
             {PRIORITY_OPTIONS.map(option => (
               <option key={option.value} value={option.value}>
@@ -45,16 +45,16 @@ const TaskForm = ({ onAddTask, selectedProjectId }) => {
           </select>
           <input
             type="number"
-            placeholder="Minutes"
+            placeholder="⏱️ Min"
             value={newTaskTime}
             onChange={e => setNewTaskTime(e.target.value)}
-            className="w-24 border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500"
+            className="w-24 border-2 border-blue-200 rounded-2xl px-3 py-2 bg-white focus:ring-4 focus:ring-indigo-200 shadow-lg"
           />
           <button 
             type="submit"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium whitespace-nowrap"
+            className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-8 py-4 rounded-2xl hover:from-indigo-600 hover:to-purple-700 transition-all font-bold whitespace-nowrap shadow-xl hover:scale-105"
           >
-            Add Task
+            <span className="mr-2">✨</span> Add Task
           </button>
         </div>
       </form>
