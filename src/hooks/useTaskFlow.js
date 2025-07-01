@@ -61,6 +61,30 @@ export const useTaskFlow = () => {
     loadFromStorage('taskflow-selected-project', 'demo-1')
   );
 
+  // Daily planning state
+  const [dailyTimeAvailable, setDailyTimeAvailable] = useState(() =>
+    loadFromStorage('taskflow-daily-time', 480) // Default 8 hours = 480 minutes
+  );
+
+  const [planningModalOpen, setPlanningModalOpen] = useState(false);
+
+  const [lastPlanningDate, setLastPlanningDate] = useState(() =>
+    loadFromStorage('taskflow-last-planning', null)
+  );
+
+  // End-of-day reflection state
+  const [reflectionModalOpen, setReflectionModalOpen] = useState(false);
+
+  const [dailyReflections, setDailyReflections] = useState(() =>
+    loadFromStorage('taskflow-reflections', [])
+  );
+
+  const [todayReflection, setTodayReflection] = useState(() => {
+    const today = new Date().toDateString();
+    const existing = loadFromStorage('taskflow-reflections', []);
+    return existing.find(r => r.date === today) || null;
+  });
+
   // Save to localStorage whenever data changes
   useEffect(() => {
     saveToStorage('taskflow-projects', projects);
@@ -77,6 +101,18 @@ export const useTaskFlow = () => {
   useEffect(() => {
     saveToStorage('taskflow-selected-project', selectedProjectId);
   }, [selectedProjectId]);
+
+  useEffect(() => {
+    saveToStorage('taskflow-daily-time', dailyTimeAvailable);
+  }, [dailyTimeAvailable]);
+
+  useEffect(() => {
+    saveToStorage('taskflow-last-planning', lastPlanningDate);
+  }, [lastPlanningDate]);
+
+  useEffect(() => {
+    saveToStorage('taskflow-reflections', dailyReflections);
+  }, [dailyReflections]);
 
   // Project operations
   const addProject = (name) => {
@@ -134,6 +170,24 @@ export const useTaskFlow = () => {
     ));
   };
 
+  const updateTaskNotes = (taskId, notes) => {
+    setTasks(prev => prev.map(t => 
+      t.id === taskId ? { ...t, notes } : t
+    ));
+    setTodoQueue(prev => prev.map(t => 
+      t.id === taskId ? { ...t, notes } : t
+    ));
+  };
+
+  const updateTaskName = (taskId, newName) => {
+    setTasks(prev => prev.map(t => 
+      t.id === taskId ? { ...t, text: newName } : t
+    ));
+    setTodoQueue(prev => prev.map(t => 
+      t.id === taskId ? { ...t, text: newName } : t
+    ));
+  };
+
   const getProjectTasks = (projectId) => {
     return tasks.filter(t => t.projectId === projectId);
   };
@@ -154,29 +208,85 @@ export const useTaskFlow = () => {
     setTodoQueue(prev => prev.filter(t => t.id !== taskId));
   };
 
-  const updateTaskNotes = (taskId, notes) => {
-    setTasks(prev => prev.map(t => 
-      t.id === taskId ? { ...t, notes } : t
-    ));
-    setTodoQueue(prev => prev.map(t => 
-      t.id === taskId ? { ...t, notes } : t
-    ));
+  // Daily planning functions
+  const updateDailyTimeAvailable = (minutes) => {
+    setDailyTimeAvailable(minutes);
+    
+    // Mark today as planned
+    const today = new Date().toDateString();
+    setLastPlanningDate(today);
   };
 
-  const updateTaskName = (taskId, newName) => {
-    setTasks(prev => prev.map(t => 
-      t.id === taskId ? { ...t, text: newName } : t
-    ));
-    setTodoQueue(prev => prev.map(t => 
-      t.id === taskId ? { ...t, text: newName } : t
-    ));
+  const openPlanningModal = () => {
+    setPlanningModalOpen(true);
   };
+
+  const closePlanningModal = () => {
+    setPlanningModalOpen(false);
+  };
+
+  const shouldShowPlanningPrompt = () => {
+    const today = new Date().toDateString();
+    return lastPlanningDate !== today && todoQueue.length === 0;
+  };
+
+  // Reflection functions
+  const openReflectionModal = () => {
+    setReflectionModalOpen(true);
+  };
+
+  const closeReflectionModal = () => {
+    setReflectionModalOpen(false);
+  };
+
+  const saveReflection = (reflectionData) => {
+    const today = new Date().toDateString();
+    const newReflection = {
+      id: generateId(),
+      date: today,
+      plannedTime: dailyTimeAvailable,
+      completedTasks: todoQueue.filter(t => t.done).length,
+      totalTasks: todoQueue.length,
+      estimationAccuracy: reflectionData.estimationAccuracy,
+      productivity: reflectionData.productivity,
+      challenges: reflectionData.challenges,
+      wins: reflectionData.wins,
+      tomorrowFocus: reflectionData.tomorrowFocus
+    };
+
+    setDailyReflections(prev => {
+      const filtered = prev.filter(r => r.date !== today);
+      return [...filtered, newReflection];
+    });
+    
+    setTodayReflection(newReflection);
+    closeReflectionModal();
+  };
+
+  const shouldShowReflectionPrompt = () => {
+    const today = new Date().toDateString();
+    const completedToday = todoQueue.filter(t => t.done).length;
+    return !todayReflection && completedToday > 0 && todoQueue.length > 0;
+  };
+
+  const getEstimationAccuracy = () => {
+    const completedTasks = todoQueue.filter(t => t.done && t.estimatedTime > 0);
+    if (completedTasks.length === 0) return null;
+    
+    // This is a simplified calculation - in reality you'd track actual time spent
+    const avgEstimate = completedTasks.reduce((sum, t) => sum + t.estimatedTime, 0) / completedTasks.length;
+    return Math.round(avgEstimate);
+  };
+
   return {
     // State
     projects,
     tasks,
     todoQueue,
     selectedProjectId,
+    dailyTimeAvailable,
+    planningModalOpen,
+    lastPlanningDate,
     
     // Setters
     setSelectedProjectId,
@@ -196,6 +306,22 @@ export const useTaskFlow = () => {
     
     // Queue operations
     addToQueue,
-    removeFromQueue
+    removeFromQueue,
+    
+    // Daily planning functions
+    updateDailyTimeAvailable,
+    openPlanningModal,
+    closePlanningModal,
+    shouldShowPlanningPrompt,
+    
+    // Reflection functions
+    reflectionModalOpen,
+    dailyReflections,
+    todayReflection,
+    openReflectionModal,
+    closeReflectionModal,
+    saveReflection,
+    shouldShowReflectionPrompt,
+    getEstimationAccuracy,
   };
 };

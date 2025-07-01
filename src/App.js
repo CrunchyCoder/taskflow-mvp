@@ -4,7 +4,9 @@ import Sidebar from './components/layout/Sidebar';
 import TaskForm from './components/tasks/TaskForm';
 import TaskList from './components/tasks/TaskList';
 import TimeDisplay from './components/common/TimeDisplay';
+import DailyPlanningModal from './components/planning/DailyPlanningModal';  
 import TodayQueue from './components/queue/TodayQueue';
+import DailyReflectionModal from './components/reflection/DailyReflectionModal';
 
 function App() {
   const {
@@ -15,6 +17,7 @@ function App() {
     setSelectedProjectId,
     addProject,
     getProject,
+    getProjectName,
     addTask,
     toggleTaskDone,
     updateTaskTime,
@@ -22,7 +25,24 @@ function App() {
     updateTaskName,
     getProjectTasks,
     addToQueue,
-    removeFromQueue
+    removeFromQueue,
+    // Add these planning functions
+    dailyTimeAvailable,
+    planningModalOpen,
+    updateDailyTimeAvailable,
+    openPlanningModal,
+    closePlanningModal,
+    shouldShowPlanningPrompt,
+    
+    // Add these reflection functions
+    reflectionModalOpen,
+    dailyReflections,
+    todayReflection,
+    openReflectionModal,
+    closeReflectionModal,
+    saveReflection,
+    shouldShowReflectionPrompt,
+    getEstimationAccuracy,
   } = useTaskFlow();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -41,7 +61,25 @@ function App() {
       addToQueue(taskId);
     }
   };
-
+  const handleSetDailyTime = (minutes) => {
+    updateDailyTimeAvailable(minutes);
+  };
+  
+  const handleAddTasksToQueue = (taskIds) => {
+    taskIds.forEach(taskId => {
+      addToQueue(taskId);
+    });
+  };
+  
+  const getAvailableTasks = () => {
+    return tasks.filter(task => 
+      !task.done && 
+      !todoQueue.find(q => q.id === task.id)
+    ).map(task => ({
+      ...task,
+      projectName: getProjectName(task.projectId)
+    }));
+  };
   const selectedProject = getProject(selectedProjectId);
   const projectTasks = getProjectTasks(selectedProjectId);
 
@@ -65,7 +103,42 @@ function App() {
         >
           <span className="mr-2">☰</span> Menu
         </button>
-  
+  {/* Planning Button */}
+
+{shouldShowPlanningPrompt() && (
+  <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-3xl p-6 border-2 border-purple-200 shadow-xl mb-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h3 className="text-xl font-bold text-purple-800 mb-2">🌅 Ready to plan your day?</h3>
+        <p className="text-purple-600">Set your available time and get smart task suggestions!</p>
+      </div>
+      <button
+        onClick={openPlanningModal}
+        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-2xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-lg"
+      >
+        🎯 Plan Day
+      </button>
+    </div>
+  </div>
+)}  
+
+{/* Reflection Prompt */}
+{shouldShowReflectionPrompt() && (
+  <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-3xl p-6 border-2 border-green-200 shadow-xl mb-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <h3 className="text-xl font-bold text-green-800 mb-2">🌅 How was your day?</h3>
+        <p className="text-green-600">Take a moment to reflect on your productivity and learn for tomorrow!</p>
+      </div>
+      <button
+        onClick={openReflectionModal}
+        className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-2xl font-semibold hover:from-green-600 hover:to-emerald-600 transition-all transform hover:scale-105 shadow-lg"
+      >
+        📝 Reflect
+      </button>
+    </div>
+  </div>
+)}
         {/* Project Tasks Section */}
         {selectedProject && (
           <section className="bg-white/70 backdrop-blur-lg rounded-3xl shadow-2xl p-8 space-y-8 border border-white/20">
@@ -132,6 +205,16 @@ function App() {
           </div>
         </div>
       )}
+
+        {/* Daily Reflection Modal */}
+        <DailyReflectionModal
+            isOpen={reflectionModalOpen}
+            onClose={closeReflectionModal}
+            onSaveReflection={saveReflection}
+            todoQueue={todoQueue}
+            dailyTimeAvailable={dailyTimeAvailable}
+            estimationAccuracy={getEstimationAccuracy()}
+        />
     </div>
   );
 }
