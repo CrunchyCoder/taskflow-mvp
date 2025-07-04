@@ -85,7 +85,10 @@ export const useTaskFlow = () => {
     return existing.find(r => r.date === today) || null;
   });
 
-  // Save to localStorage whenever data changes
+  // Dashboard state
+  const [currentView, setCurrentView] = useState('tasks'); // 'tasks' or 'dashboard'
+
+// Save to localStorage whenever data changes
   useEffect(() => {
     saveToStorage('taskflow-projects', projects);
   }, [projects]);
@@ -153,11 +156,21 @@ export const useTaskFlow = () => {
   };
 
   const toggleTaskDone = (taskId) => {
+    const now = new Date().toISOString();
+    
     setTasks(prev => prev.map(t => 
-      t.id === taskId ? { ...t, done: !t.done } : t
+      t.id === taskId ? { 
+        ...t, 
+        done: !t.done,
+        completedAt: !t.done ? now : null  // Set timestamp when marking done, clear when undoing
+      } : t
     ));
     setTodoQueue(prev => prev.map(t => 
-      t.id === taskId ? { ...t, done: !t.done } : t
+      t.id === taskId ? { 
+        ...t, 
+        done: !t.done,
+        completedAt: !t.done ? now : null
+      } : t
     ));
   };
 
@@ -278,6 +291,15 @@ export const useTaskFlow = () => {
     return Math.round(avgEstimate);
   };
 
+  // Dashboard functions
+const switchToTasksView = () => {
+  setCurrentView('tasks');
+};
+
+const switchToDashboardView = () => {
+  setCurrentView('dashboard');
+};
+
   return {
     // State
     projects,
@@ -287,6 +309,7 @@ export const useTaskFlow = () => {
     dailyTimeAvailable,
     planningModalOpen,
     lastPlanningDate,
+    currentView,
     
     // Setters
     setSelectedProjectId,
@@ -323,5 +346,10 @@ export const useTaskFlow = () => {
     saveReflection,
     shouldShowReflectionPrompt,
     getEstimationAccuracy,
+
+    // Dashboard functions
+    currentView,
+    switchToTasksView,
+    switchToDashboardView,
   };
 };
