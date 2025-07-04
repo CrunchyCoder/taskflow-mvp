@@ -105,7 +105,7 @@ function App() {
         </button>
 
 
-  {/* Planning Bu tton */}
+  {/* Planning Button */}
 
 {shouldShowPlanningPrompt() && (
   <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-3xl p-6 border-2 border-purple-200 shadow-xl mb-6">
