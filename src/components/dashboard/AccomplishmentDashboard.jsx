@@ -114,6 +114,177 @@ const AccomplishmentDashboard = ({ tasks, projects, getProjectName }) => {
     }
   };
 
+  // Get task heatmap data (GitHub-style calendar)
+  const getTaskHeatmapData = () => {
+    const weeks = [];
+    const today = new Date();
+    
+    // Go back 12 weeks (84 days)
+    const startDate = new Date(today.getTime() - 83 * 24 * 60 * 60 * 1000);
+    
+    // Create 12 weeks of data
+    for (let week = 0; week < 12; week++) {
+      const weekData = [];
+      
+      for (let day = 0; day < 7; day++) {
+        const currentDate = new Date(startDate.getTime() + (week * 7 + day) * 24 * 60 * 60 * 1000);
+        const dateString = currentDate.toDateString();
+      
+        // Count tasks completed on this day
+        const completedOnDay = tasks.filter(task => 
+          task.done && 
+          task.completedAt && 
+          new Date(task.completedAt).toDateString() === dateString
+        ).length;
+      
+        weekData.push({
+          date: currentDate,
+          count: completedOnDay,
+          dateString: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        });
+      }
+    
+      weeks.push(weekData);
+    }
+  
+    return weeks;
+  };
+
+  // Get color intensity for heatmap based on task count
+  const getHeatmapColor = (count) => {
+    if (count === 0) return 'bg-gray-100';
+    if (count === 1) return 'bg-green-200';
+    if (count === 2) return 'bg-green-300';
+    if (count === 3) return 'bg-green-400';
+    if (count >= 4) return 'bg-green-500';
+    return 'bg-gray-100';
+  };
+
+  // Calculate current streak and best streak
+  const getStreakData = () => {
+    const completedTasks = tasks
+      .filter(task => task.done && task.completedAt)
+      .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+
+    if (completedTasks.length === 0) {
+      return { currentStreak: 0, bestStreak: 0, lastActivityDate: null };
+    }
+
+    let currentStreak = 0;
+    let bestStreak = 0;
+    
+    // Group tasks by date
+    const tasksByDate = {};
+    completedTasks.forEach(task => {
+      const dateKey = new Date(task.completedAt).toDateString();
+      if (!tasksByDate[dateKey]) {
+        tasksByDate[dateKey] = 0;
+      }
+      tasksByDate[dateKey]++;
+    });
+    
+    const dates = Object.keys(tasksByDate).sort((a, b) => new Date(b) - new Date(a));
+    
+    // Calculate current streak
+    let streakDate = new Date();
+    for (let i = 0; i < 30; i++) { // Check last 30 days
+      const checkDate = new Date(streakDate.getTime() - i * 24 * 60 * 60 * 1000);
+      const dateKey = checkDate.toDateString();
+      
+      if (tasksByDate[dateKey]) {
+        currentStreak++;
+      } else if (i > 1) { // Allow 1 day gap for "today"
+        break;
+      }
+    }
+    
+    // Calculate best streak ever
+    let consecutiveDays = 0;
+    for (let i = 0; i < dates.length; i++) {
+      const currentDate = new Date(dates[i]);
+      const nextDate = i < dates.length - 1 ? new Date(dates[i + 1]) : null;
+      
+      consecutiveDays++;
+      
+      if (!nextDate || (currentDate - nextDate) > 24 * 60 * 60 * 1000) {
+        bestStreak = Math.max(bestStreak, consecutiveDays);
+        consecutiveDays = 0;
+      }
+    }
+    
+    return {
+      currentStreak: Math.max(currentStreak, 0),
+      bestStreak: Math.max(bestStreak, currentStreak),
+      lastActivityDate: completedTasks.length > 0 ? completedTasks[0].completedAt : null
+    };
+  };
+
+  // Get achievements based on task completion
+  const getAchievements = () => {
+    const totalCompleted = tasks.filter(task => task.done).length;
+    const streakData = getStreakData();
+    const totalTime = calculateTotalTime(tasks.filter(task => task.done));
+    
+    const achievements = [
+      {
+        id: 'first-task',
+        title: 'Getting Started',
+        description: 'Complete your first task',
+        icon: '🎯',
+        unlocked: totalCompleted >= 1,
+        progress: Math.min(totalCompleted, 1),
+        target: 1
+      },
+      {
+        id: 'task-master',
+        title: 'Task Master',
+        description: 'Complete 10 tasks',
+        icon: '💪',
+        unlocked: totalCompleted >= 10,
+        progress: Math.min(totalCompleted, 10),
+        target: 10
+      },
+      {
+        id: 'productivity-guru',
+        title: 'Productivity Guru',
+        description: 'Complete 50 tasks',
+        icon: '🚀',
+        unlocked: totalCompleted >= 50,
+        progress: Math.min(totalCompleted, 50),
+        target: 50
+      },
+      {
+        id: 'streak-starter',
+        title: 'Streak Starter',
+        description: 'Maintain a 3-day streak',
+        icon: '🔥',
+        unlocked: streakData.bestStreak >= 3,
+        progress: Math.min(streakData.bestStreak, 3),
+        target: 3
+      },
+      {
+        id: 'streak-champion',
+        title: 'Streak Champion',
+        description: 'Maintain a 7-day streak',
+        icon: '⚡',
+        unlocked: streakData.bestStreak >= 7,
+        progress: Math.min(streakData.bestStreak, 7),
+        target: 7
+      },
+      {
+        id: 'time-tracker',
+        title: 'Time Tracker',
+        description: 'Track 10 hours of work',
+        icon: '⏰',
+        unlocked: totalTime >= 600, // 10 hours in minutes
+        progress: Math.min(totalTime, 600),
+        target: 600
+      }
+    ];
+    
+    return achievements;
+  };
+  
   // Get productivity trends data for chart
   const getProductivityTrendsData = () => {
     const days = [];
@@ -517,16 +688,127 @@ const AccomplishmentDashboard = ({ tasks, projects, getProjectName }) => {
         {/* Task Heatmap - Full Width */}
         <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 border border-white/40 shadow-xl">
           <h3 className="text-lg font-bold text-gray-800 mb-4">📅 Task Completion Heatmap</h3>
-          <div className="h-32 bg-gray-50 rounded-2xl flex items-center justify-center">
-            <span className="text-gray-500">Task Heatmap Coming Soon</span>
+          <div className="space-y-4">
+            {/* Heatmap Grid */}
+            <div className="flex justify-center">
+              <div className="grid grid-cols-12 gap-1">
+                {getTaskHeatmapData().map((week, weekIndex) => (
+                  week.map((day, dayIndex) => (
+                    <div
+                      key={`${weekIndex}-${dayIndex}`}
+                      className={`w-3 h-3 rounded-sm ${getHeatmapColor(day.count)} hover:ring-2 hover:ring-purple-300 transition-all group relative`}
+                      title={`${day.dateString}: ${day.count} tasks`}
+                    >
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                        {day.dateString}: {day.count} tasks
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-800"></div>
+                      </div>
+                    </div>
+                  ))
+                ))}
+              </div>
+            </div>
+    
+            {/* Legend */}
+            <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
+              <span>Less</span>
+              <div className="flex space-x-1">
+                <div className="w-3 h-3 bg-gray-100 rounded-sm"></div>
+                <div className="w-3 h-3 bg-green-200 rounded-sm"></div>
+                <div className="w-3 h-3 bg-green-300 rounded-sm"></div>
+                <div className="w-3 h-3 bg-green-400 rounded-sm"></div>
+                <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
+              </div>
+              <span>More</span>
+            </div>
+    
+            <div className="text-center text-sm text-gray-500">
+              Last 12 weeks of activity
+            </div>
           </div>
         </div>
 
         {/* Achievements Row */}
         <div className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 border border-white/40 shadow-xl">
           <h3 className="text-lg font-bold text-gray-800 mb-4">🏆 Achievements & Streaks</h3>
-          <div className="h-24 bg-gray-50 rounded-2xl flex items-center justify-center">
-            <span className="text-gray-500">Achievements Coming Soon</span>
+          
+          <div className="space-y-6">
+            {/* Streak Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl border border-orange-200">
+                <div className="text-2xl font-bold text-orange-600">{getStreakData().currentStreak}</div>
+                <div className="text-sm text-orange-700">🔥 Current Streak</div>
+                <div className="text-xs text-orange-500 mt-1">
+                  {getStreakData().currentStreak > 0 ? 'days in a row' : 'Complete a task today!'}
+                </div>
+              </div>
+              
+              <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-200">
+                <div className="text-2xl font-bold text-purple-600">{getStreakData().bestStreak}</div>
+                <div className="text-sm text-purple-700">⚡ Best Streak</div>
+                <div className="text-xs text-purple-500 mt-1">personal record</div>
+              </div>
+              
+              <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-200">
+                <div className="text-2xl font-bold text-green-600">{tasks.filter(task => task.done).length}</div>
+                <div className="text-sm text-green-700">✅ Total Completed</div>
+                <div className="text-xs text-green-500 mt-1">lifetime tasks</div>
+              </div>
+            </div>
+            
+            {/* Achievements Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {getAchievements().map(achievement => (
+                <div
+                  key={achievement.id}
+                  className={`relative p-3 rounded-2xl border transition-all ${
+                    achievement.unlocked
+                      ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200 shadow-md'
+                      : 'bg-gray-50 border-gray-200 opacity-60'
+                  }`}
+                >
+                  {/* Achievement Badge */}
+                  <div className="text-center">
+                    <div className={`text-2xl mb-2 ${achievement.unlocked ? '' : 'grayscale'}`}>
+                      {achievement.icon}
+                    </div>
+                    <div className={`text-xs font-medium mb-1 ${
+                      achievement.unlocked ? 'text-gray-800' : 'text-gray-500'
+                    }`}>
+                      {achievement.title}
+                    </div>
+                    <div className={`text-xs leading-tight ${
+                      achievement.unlocked ? 'text-gray-600' : 'text-gray-400'
+                    }`}>
+                      {achievement.description}
+                    </div>
+                    
+                    {/* Progress Bar for Unlocked Achievements */}
+                    {!achievement.unlocked && (
+                      <div className="mt-2">
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div 
+                            className="bg-gradient-to-r from-purple-400 to-pink-400 h-1.5 rounded-full transition-all duration-500"
+                            style={{ width: `${(achievement.progress / achievement.target) * 100}%` }}
+                          />
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {achievement.progress}/{achievement.target}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Unlocked Badge */}
+                  {achievement.unlocked && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs">✓</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
