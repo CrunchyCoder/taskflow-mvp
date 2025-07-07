@@ -313,6 +313,28 @@ const AccomplishmentDashboard = ({ tasks, projects, getProjectName }) => {
     return days;
   };
 
+// Get scheduled vs completed data for accountability
+const getScheduledVsCompletedData = () => {
+  const today = new Date().toDateString();
+  const todayTasks = tasks.filter(task => {
+    // Tasks that were planned for today (you can adjust this logic based on how you track scheduled tasks)
+    const taskDate = task.createdAt ? new Date(task.createdAt).toDateString() : null;
+    return taskDate === today;
+  });
+  
+  const scheduledToday = todayTasks.length;
+  const completedToday = todayTasks.filter(task => task.done).length;
+  const completionRate = scheduledToday > 0 ? Math.round((completedToday / scheduledToday) * 100) : 0;
+  
+  return {
+    scheduled: scheduledToday,
+    completed: completedToday,
+    completionRate,
+    remaining: scheduledToday - completedToday
+  };
+};
+
+
   // Get category breakdown data for pie chart
   const getCategoryBreakdownData = () => {
     const categoryData = {};

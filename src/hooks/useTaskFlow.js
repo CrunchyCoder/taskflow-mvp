@@ -174,13 +174,26 @@ export const useTaskFlow = () => {
     ));
   };
 
-  const updateTaskTime = (taskId, estimatedTime) => {
-    setTasks(prev => prev.map(t => 
-      t.id === taskId ? { ...t, estimatedTime } : t
-    ));
-    setTodoQueue(prev => prev.map(t => 
-      t.id === taskId ? { ...t, estimatedTime } : t
-    ));
+  const updateTaskTime = (taskId, timeData) => {
+    // Handle both old format (just a number) and new format (object with timer data)
+    const updateFunction = (task) => {
+      if (task.id === taskId) {
+        if (typeof timeData === 'number') {
+          // Old format - just updating estimated time
+          return { ...task, estimatedTime: timeData };
+        } else if (typeof timeData === 'object') {
+          // New format - updating timer data
+          return { 
+            ...task, 
+            ...timeData // This spreads startTime, isTimerRunning, actualTime, etc.
+          };
+        }
+      }
+      return task;
+    };
+  
+    setTasks(prev => prev.map(updateFunction));
+    setTodoQueue(prev => prev.map(updateFunction));
   };
 
   const updateTaskNotes = (taskId, notes) => {
